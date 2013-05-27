@@ -11,3 +11,12 @@ does not need any special installation, nor any external framework like Guzzle o
 @todo  implemented only few REST calls, others tbd
 
 http://myrrix.com/rest-api
+
+@example:
+```php
+include_once 'myrrixRESTlibrary.php';
+
+$client=new myrrixRESTlibrary("http://localhost",80);
+//$client->debug=true;
+var_dump($client->mostSimilar(array(23964,24900)));
+```
