@@ -2,12 +2,12 @@
 
 /**
  * PHP library for Myrrix REST API calls
- * 
+ *
  * does not need any special installation, nor any external framework like Guzzle or Composer
  * @require lib::curl
  * @version alfa 0.0
- * @todo  implemented only few REST calls, others tbd
- * 
+ * @todo	implemented only few REST calls, others tbd
+ *
  * http://myrrix.com/rest-api
  * @author ulkas
  */
@@ -237,8 +237,8 @@ class myrrixRESTlibrary {
 	 */
 	public function setUserTag($userid,$tag){
 		$method="POST";
-		$path="/tag/user/".$userid.'/'.$tag;		
-		return $this->call($path,$method);		
+		$path="/tag/user/".$userid.'/'.$tag;
+		return $this->call($path,$method);
 	}
 	/**
 	 * http://myrrix.com/rest-api/#setitemtag
@@ -248,9 +248,21 @@ class myrrixRESTlibrary {
 	 */
 	public function setItemTag($itemid,$tag){
 		$method="POST";
-		$path="/tag/item/".$itemid.'/'.$tag;		
-		return $this->call($path,$method);		
+		$path="/tag/item/".$itemid.'/'.$tag;
+		return $this->call($path,$method);
 	}
+	/**
+	 * http://myrrix.com/rest-api/#setaddpreference
+	 * @return boolean
+	 * @param id user
+	 * @param id item
+	 */
+	public function setAddPreference($user,$item,$pref=1.0){
+		$method="POST";
+		$path="/pref/".$user.'/'.$item;
+		//TODO: pref
+		return $this->call($path,$method);
+	} 
 
 	/**#@-*/
 
