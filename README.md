@@ -7,6 +7,7 @@ does not need any special installation, nor any external framework like Guzzle o
 @require lib::curl
 
 @version alfa 0.0 
+
 @todo  implemented only few REST calls, others tbd
 
 http://myrrix.com/rest-api
