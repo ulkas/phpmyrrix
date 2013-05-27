@@ -254,7 +254,7 @@ class myrrixRESTlibrary {
 	/**
 	 * http://myrrix.com/rest-api/#setaddpreference
 	 * @return boolean
-	 * @param id user
+	 * @param id user 
 	 * @param id item
 	 */
 	public function setAddPreference($user,$item,$pref=1.0){
