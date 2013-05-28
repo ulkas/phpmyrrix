@@ -53,7 +53,7 @@ class myrrixRESTlibrary {
 	 * @param string $method
 	 * @param array $data
 	 */
-	protected function curl($path,$method="",$data=array(),$header=""){
+	protected function curl($path,$method="",$data=array(),$header=array(),$body=""){
 		$postparams="";
 		if(is_array($data)){
 			foreach ($data as $key=>$value) {
@@ -78,12 +78,16 @@ class myrrixRESTlibrary {
 		if(is_array($header)){
 			curl_setopt($ch, CURLOPT_HTTPHEADER,$header);
 		}
+		if($body){
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST,$method);
+			curl_setopt($ch, CURLOPT_POSTFIELDS,$body);
+		}
 		curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
 		curl_setopt($ch, CURLOPT_URL,$target_url);
 		curl_setopt($ch, CURLOPT_AUTOREFERER, true);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
 		curl_setopt($ch, CURLOPT_TIMEOUT, $this->executionTimeout);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->timeout);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->connectionTimeout);
 		$html= curl_exec($ch);
 		$code=curl_getinfo($ch,CURLINFO_HTTP_CODE);
 
@@ -92,7 +96,7 @@ class myrrixRESTlibrary {
 			$html .= " | " . curl_error($ch);
 		}
 		curl_close($ch);
-		return array($code,$html);
+		return array($code,$html); 
 	}
 	/**
 	 * universal requester, serves for parsing html return codes
@@ -114,8 +118,8 @@ class myrrixRESTlibrary {
 	 * @param string $method
 	 * @param array $data
 	 */
-	protected function call($path,$method="",$data=array()){
-		list($code,$html)=$this->curl($path,$method,$data);
+	protected function call($path,$method="",$data=array(),$body=""){
+		list($code,$html)=$this->curl($path,$method,$data,"",$body);
 		$res=false;
 		switch ($code){
 			case 200:	$res=true; break;
@@ -161,7 +165,6 @@ class myrrixRESTlibrary {
 	/**#@+
 	 * REST query methods
 	 */
-
 	/**
 	 * http://myrrix.com/rest-api/#ready
 	 * @return boolean
@@ -187,17 +190,10 @@ class myrrixRESTlibrary {
 	 * http://myrrix.com/rest-api/#recommend
 	 * @return array(item=>preference)
 	 */
-	public function recommend($userid,$howmany="",$considerKnownItems="",$rescorerParams=""){
-		$path="/recommend/".$userid;
+	public function recommend($userid,$howmany=20,$considerKnownItems=false,$rescorerParams=""){
+		$path="/recommend/".$userid.'?howMany='.$howmany.'&considerKnownItems='.$considerKnownItems.'&rescorerParams='.$rescorerParams;
 		$method="GET";
 		$header=array('Accept: text/csv');
-		//TODO: put optional arguments
-		/**
-		 * Arguments
-		 howMany: Maximum number of recommendations to return. Optional. Defaults to 10.
-		 considerKnownItems: Whether to consider user's known items as candidates for recommendation. Optional. Defaults to false.
-		 rescorerParams: Optional parameters to the rescorer. May be repeated.
-		 */
 		$data=$this->request($path,$method,"",$header);
 		return self::CSVtoArray($data);
 	}
@@ -226,6 +222,7 @@ class myrrixRESTlibrary {
 		}else {
 			$path.=$items;
 		}
+		$path.='?howMany='.$howmany.'&rescorerParams='.$rescorerParams;
 		$data=$this->request($path,$method,"",$header);
 		return self::CSVtoArray($data);
 	}
@@ -254,15 +251,14 @@ class myrrixRESTlibrary {
 	/**
 	 * http://myrrix.com/rest-api/#setaddpreference
 	 * @return boolean
-	 * @param id user 
+	 * @param id user
 	 * @param id item
 	 */
 	public function setAddPreference($user,$item,$pref=1.0){
 		$method="POST";
 		$path="/pref/".$user.'/'.$item;
-		//TODO: pref
-		return $this->call($path,$method);
-	} 
+		return $this->call($path,$method,"",$pref);
+	}
 
 	/**#@-*/
 
