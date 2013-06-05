@@ -4,7 +4,8 @@ phpmyrrix
 PHP library for Myrrix REST API calls
 does not need any special installation, nor any external framework like Guzzle or Composer
 
-@require lib::curl
+@require lib::curl, php5
+there is also a dummy version for php4
 
 @version alfa 0.0 
 

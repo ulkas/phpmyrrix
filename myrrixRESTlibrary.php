@@ -12,8 +12,8 @@
  * @author ulkas
  */
 class myrrixRESTlibrary {
-	protected $serverUrl	=	"http://localhost";
-	protected $serverPort	=	80;
+	protected $serverUrl	=	"10.10.0.119";
+	protected $serverPort	=	6685;
 	protected $dataFile		=	"";
 	protected $methodType	=	"POST";
 	protected $userAgent	=	"myrrix REST library for PHP";
@@ -38,12 +38,26 @@ class myrrixRESTlibrary {
 	}
 	/**
 	 * wheter the server is ready to query
+	 *
+	 * 302 Temporary Redirect if, in a distributed environment, another partition should handle the request
+	 400 Bad Request if the arguments are invalid, like a non-numeric ID
+	 401 Unauthorized if a username/password is required, but not supplied correctly in the request via HTTP DIGEST
+	 405 Method Not Allowed if an incorrect HTTP method is used, like GET where POST is required
+	 500 Internal Server Error if an unexpected server-side exception occurs
+	 503 Service Unavailable if no model is yet available to serve requests
+	 *
 	 * @return boolean
 	 */
 	protected function ok(){
 		switch ($this->ok){
 			case 200: return true;break;
+			case 302: return true;break;
+			case 400: return true;break;
+			case 401: return true;break;
+			case 405: return true;break;
 			case true: return true;break;
+			case 404: return false; break;
+			case false: return false;break;
 			default: return false;
 		}
 	}
@@ -82,6 +96,8 @@ class myrrixRESTlibrary {
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST,$method);
 			curl_setopt($ch, CURLOPT_POSTFIELDS,$body);
 		}
+		if($method=='DELETE')curl_setopt($ch, CURLOPT_CUSTOMREQUEST,$method);
+		
 		curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
 		curl_setopt($ch, CURLOPT_URL,$target_url);
 		curl_setopt($ch, CURLOPT_AUTOREFERER, true);
@@ -96,7 +112,7 @@ class myrrixRESTlibrary {
 			$html .= " | " . curl_error($ch);
 		}
 		curl_close($ch);
-		return array($code,$html); 
+		return array($code,$html);
 	}
 	/**
 	 * universal requester, serves for parsing html return codes
@@ -121,6 +137,7 @@ class myrrixRESTlibrary {
 	protected function call($path,$method="",$data=array(),$body=""){
 		list($code,$html)=$this->curl($path,$method,$data,"",$body);
 		$res=false;
+		if($this->debug)var_dump($code);
 		switch ($code){
 			case 200:	$res=true; break;
 			//TODO: add additional codes if neccessary
@@ -157,7 +174,8 @@ class myrrixRESTlibrary {
 			$value=trim($value);
 			if(!$value)continue;
 			$value=explode(",", $value);
-			$res[$value[0]]=$value[1];
+			if(count($value)>1)$res[$value[0]]=$value[1];
+			else $res[]=$value[0];
 		}
 		return $res;
 	}
@@ -174,8 +192,7 @@ class myrrixRESTlibrary {
 		$method="HEAD";
 		//set ok status when testing readiness of server
 		list($this->ok,$res)=$this->curl($path,$method);
-		if($this->ok==200)return true;
-		else return false;
+		return $this->ok();
 	}
 	/**
 	 * http://myrrix.com/rest-api/#refresh
@@ -258,6 +275,27 @@ class myrrixRESTlibrary {
 		$method="POST";
 		$path="/pref/".$user.'/'.$item;
 		return $this->call($path,$method,"",$pref);
+	}
+	/**
+	 * http://myrrix.com/rest-api/#removepreference
+	 * @return boolean
+	 * @param id user
+	 * @param id item
+	 */
+	public function removePreference($user,$item){
+		$method="DELETE";
+		$path="/pref/".$user.'/'.$item;
+		return $this->call($path,$method);
+	}
+	/**
+	 * http://myrrix.com/rest-api/#getalluserids
+	 * @return array
+	 */
+	public function getAllUserIds(){
+		$method="GET";
+		$path="/user/allIDs";
+		$header=array('Accept: text/csv');
+		return self::CSVtoArray($this->request($path,$method,"",$header));
 	}
 
 	/**#@-*/
